@@ -1,13 +1,18 @@
-use std::fs;
-
 mod ca_cert;
 
+use ca_cert::Ca;
+use std::fs;
+
 fn main() {
-    let ca = ca_cert::create();
+    let ca = Ca::create();
+
+    let cert = ca.cert.serialize_pem().unwrap();
+    let private_key = ca.cert.serialize_private_key_pem();
 
     fs::create_dir_all("certs/").unwrap();
-    fs::write("certs/rootca.pem", ca.cert.as_bytes()).unwrap();
-    fs::write("certs/rootca.key", ca.key.as_bytes()).unwrap();
+
+    fs::write("certs/rootca.pem", cert).unwrap();
+    fs::write("certs/rootca.key", private_key).unwrap()
 }
 
 //     let mut dn = DistinguishedName::new();
