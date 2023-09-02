@@ -1,0 +1,13 @@
+[package]
+name = "crtcli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "4.3.23"
+pem = "3.0.2"
+rcgen = "0.11.1"
+time = "0.3.28"
+x509-parser = "0.15.1"
