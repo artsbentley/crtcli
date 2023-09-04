@@ -1,10 +1,12 @@
 mod ca_cert;
+mod entity;
 
 use ca_cert::Ca;
+use entity::Entity;
 use std::fs;
 
 fn main() {
-    let ca = Ca::create();
+    let ca = Ca::new();
 
     let cert = ca.cert.serialize_pem().unwrap();
     let private_key = ca.cert.serialize_private_key_pem();
@@ -12,7 +14,11 @@ fn main() {
     fs::create_dir_all("certs/").unwrap();
 
     fs::write("certs/rootca.pem", cert).unwrap();
-    fs::write("certs/rootca.key", private_key).unwrap()
+    fs::write("certs/rootca.key", private_key).unwrap();
+
+    let entity = Entity::new();
+    let csr = entity.create_csr();
+    println!("{}", csr);
 }
 
 //     let mut dn = DistinguishedName::new();
