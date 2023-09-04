@@ -2,13 +2,14 @@ use rcgen::{
     Certificate, CertificateParams, DistinguishedName, ExtendedKeyUsagePurpose, IsCa, KeyPair,
     KeyUsagePurpose,
 };
+use std::env;
 
 // use std::{env, fs};
 
 pub struct Ca {
     pub cert: Certificate,
 }
-
+// TODO: instantiate new CA if doesnt exist yet
 impl Ca {
     pub fn new() -> Ca {
         // CA configuration
@@ -16,7 +17,9 @@ impl Ca {
         params.is_ca = IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
 
         let mut dn = DistinguishedName::new();
-        dn.push(rcgen::DnType::CommonName, "rootca");
+
+        let which = env::var("USER").unwrap();
+        dn.push(rcgen::DnType::CommonName, which);
         params.distinguished_name = dn;
 
         let key_pair = KeyPair::generate(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();

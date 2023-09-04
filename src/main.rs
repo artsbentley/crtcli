@@ -21,7 +21,7 @@ fn main() {
     // SERVER
     let server = ServerCertificate::new();
     let server_key = server.cert.serialize_private_key_pem();
-    let server_csr = server.cert.serialize_pem().unwrap();
+    let server_csr = server.create_csr();
     let server_cert = ca.sign_cert(&server.cert);
 
     println!("{server_key}{server_csr} {server_cert}");
@@ -35,7 +35,7 @@ fn main() {
     fs::write("certs/entity.key", entity_key).unwrap();
 
     fs::write("certs/server.pem", server_cert).unwrap();
-    fs::write("certs/servercrs.pem", server_csr).unwrap();
+    fs::write("certs/servercsr.pem", server_csr).unwrap();
     fs::write("certs/server.key", server_key).unwrap();
 }
 

@@ -48,14 +48,15 @@ impl ServerCertificate {
     pub fn new() -> Self {
         let mut params = CertificateParams::default();
 
+        params.not_before = time::OffsetDateTime::now_utc();
+        params.not_after = time::OffsetDateTime::now_utc() + time::Duration::days(365 * 20);
         params.alg = &PKCS_ECDSA_P384_SHA384;
         params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).unwrap());
         params.key_identifier_method = KeyIdMethod::Sha256;
 
-        // create fn get_
-
-        params.distinguished_name = Self::get_distinguished_name("localhost".to_string());
-        params.subject_alt_names = Self::get_brokers(10, "test".to_string());
+        params.distinguished_name =
+            Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
+        params.subject_alt_names = Self::get_brokers(10, "asml-01.poc.kpn-dsh.com".to_string());
 
         let cert = Certificate::from_params(params).unwrap();
         ServerCertificate { cert }
@@ -88,11 +89,15 @@ impl ServerCertificate {
     pub fn get_brokers(n: u8, broker_name: String) -> Vec<SanType> {
         (1..=n)
             .map(|i| {
-                let dns_name = format!("broker-{}.kafka.{}", broker_name, i);
+                let dns_name = format!("broker-{}.kafka.{}", i, broker_name);
                 SanType::DnsName(dns_name)
             })
             .collect()
         // let brokers = vec![SanType::DnsName("localhost".to_string())];
         // brokers
+    }
+
+    pub fn create_csr(&self) -> String {
+        self.cert.serialize_request_pem().unwrap()
     }
 }
