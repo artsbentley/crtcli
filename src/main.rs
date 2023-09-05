@@ -4,13 +4,29 @@ mod entity;
 use ca_cert::Ca;
 use entity::Entity;
 use entity::ServerCertificate;
+use sqlx::{migrate::MigrateDatabase, Sqlite};
 use std::fs;
 
-fn main() {
+const DB_URL: &str = "sqlite://sqlite.db";
+#[tokio::main]
+async fn main() {
+    // SQL
+    if !Sqlite::database_exists(DB_URL).await.unwrap_or(false) {
+        println!("Creating database {}", DB_URL);
+        match Sqlite::create_database(DB_URL).await {
+            Ok(_) => println!("Create db success"),
+            Err(error) => panic!("error: {}", error),
+        }
+    } else {
+        println!("Database already exists");
+    }
+    // fn main() {
+
     // CA
+
     let ca = Ca::new();
-    let ca_cert = ca.cert.serialize_pem().unwrap();
-    let ca_private_key = ca.cert.serialize_private_key_pem();
+    // let ca_cert = &ca.cert.serialize_pem().unwrap();
+    // let ca_private_key = &ca.cert.serialize_private_key_pem();
 
     // ENTITY
     let entity = Entity::new();
@@ -24,11 +40,11 @@ fn main() {
     let server_csr = server.create_csr();
     let server_cert = ca.sign_cert(&server.cert);
 
-    println!("{server_key}{server_csr} {server_cert}");
+    println!("{server_cert} {server_key}");
 
     fs::create_dir_all("certs/").unwrap();
-    fs::write("certs/rootca.pem", ca_cert).unwrap();
-    fs::write("certs/rootca.key", ca_private_key).unwrap();
+    // fs::write("certs/rootca.pem", ca_cert).unwrap();
+    // fs::write("certs/rootca.key", ca_private_key).unwrap();
 
     fs::write("certs/entity.pem", entity_cert).unwrap();
     fs::write("certs/entitycsr.pem", entity_csr).unwrap();

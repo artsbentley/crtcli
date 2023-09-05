@@ -3,15 +3,45 @@ use rcgen::{
     KeyUsagePurpose,
 };
 use std::env;
+use std::fs;
+use std::path::Path;
 
 // use std::{env, fs};
 
 pub struct Ca {
     pub cert: Certificate,
 }
-// TODO: instantiate new CA if doesnt exist yet
+
 impl Ca {
     pub fn new() -> Ca {
+        if Self::exists() {
+            println!("CA certificate exists");
+            return Self::from_file();
+        }
+        println!("CA certificate does not exist");
+        Self::create_ca()
+    }
+
+    // exists: return enum with string
+
+    pub fn exists() -> bool {
+        let ca_cert_path = "certs/rootca.pem";
+        Path::new(ca_cert_path).exists()
+    }
+
+    pub fn from_file() -> Ca {
+        let ca_cert_path = fs::read_to_string("certs/rootca.pem").unwrap();
+        let ca_key_path = fs::read_to_string("certs/rootca.key").unwrap();
+
+        let ca_key = KeyPair::from_pem(&ca_key_path).unwrap();
+
+        let ca_cert_params = CertificateParams::from_ca_cert_pem(&ca_cert_path, ca_key).unwrap();
+        let cert = Certificate::from_params(ca_cert_params).unwrap();
+
+        Ca { cert }
+    }
+
+    pub fn create_ca() -> Ca {
         // CA configuration
         let mut params = CertificateParams::default();
         params.is_ca = IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
