@@ -71,6 +71,13 @@ impl Ca {
 
         let cert = Certificate::from_params(params).unwrap();
         // let cert_pem = cert.serialize_pem().unwrap();
+
+        // TODO: wrap creation of files into function
+        let ca_cert = cert.serialize_pem().unwrap();
+        let ca_private_key = cert.serialize_private_key_pem();
+
+        fs::write("certs/rootca.pem", ca_cert).unwrap();
+        fs::write("certs/rootca.key", ca_private_key).unwrap();
         Ca { cert }
     }
 
