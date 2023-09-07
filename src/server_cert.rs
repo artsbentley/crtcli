@@ -42,15 +42,10 @@ impl ServerCertificate {
 
         // DN
         let common_name = format!("{}.{}.{}", &broker_prefix, config.name, &url);
-        // println!("{dn_postfix}");
-
         params.distinguished_name = Self::extend_distinguished_name(common_name);
-        // Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
 
         // SAN
-        // TODO: remove hardcoded broker values
         let san_postfix = format!("{}.{}", config.name, &url);
-
         params.subject_alt_names = Self::get_brokers(broker_amount, broker_prefix, san_postfix);
 
         let cert = Certificate::from_params(params).unwrap();
