@@ -45,7 +45,7 @@ impl ServerCertificate {
         // Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
 
         // SAN
-        // TODO: remove hardcoded borker values
+        // TODO: remove hardcoded broker values
         let san_postfix = format!("{}.{}", config.name, &url);
         let broker_amount = config.broker_amount.get();
         let broker_prefix = config.broker_prefix;

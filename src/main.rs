@@ -41,6 +41,7 @@ async fn main() {
     let entity_cert = ca.sign_cert(&entity.cert);
 
     // TODO: try test out all of the builder patterns
+
     // SERVER
     let server_config = TenantBuilder::new()
         .name("tenantname".to_string())
