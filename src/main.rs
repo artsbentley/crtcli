@@ -3,7 +3,7 @@ mod ca_cert;
 mod entity;
 mod server_cert;
 
-use args::{BrokerAmount, Environment, InjectDSH, TenantBuilder, TenantConfig};
+use args::{BrokerAmount, Environment, InjectDSH, TenantConfig, TenantConfigBuilder};
 use ca_cert::Ca;
 use entity::Entity;
 use server_cert::ServerCertificate;
@@ -40,14 +40,14 @@ async fn main() {
     let entity_csr = entity.create_csr();
     let entity_cert = ca.sign_cert(&entity.cert);
 
-    // TODO: try test out all of the builder patterns
-
     // SERVER
-    let server_config = TenantBuilder::new()
+    let server_config = TenantConfigBuilder::new()
         .name("tenantname".to_string())
         .environment(Environment::POC)
+        // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
+        // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
         .passphrase("test".to_string())
-        .broker_prefix("helloooo".to_string())
+        .broker_prefix("broker-1".to_string())
         .broker_amount(BrokerAmount::Custom(3))
         .inject_dsh(InjectDSH::False)
         .build();

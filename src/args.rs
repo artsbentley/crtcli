@@ -68,7 +68,7 @@ pub enum InjectDSH {
     False,
 }
 
-pub struct TenantBuilder {
+pub struct TenantConfigBuilder {
     pub name: Option<String>,
     pub environment: Option<Environment>,
     pub passphrase: Option<String>,
@@ -77,9 +77,9 @@ pub struct TenantBuilder {
     pub inject_dsh: Option<InjectDSH>,
 }
 
-impl TenantBuilder {
+impl TenantConfigBuilder {
     pub fn new() -> Self {
-        TenantBuilder {
+        TenantConfigBuilder {
             name: None,
             environment: None,
             passphrase: None,

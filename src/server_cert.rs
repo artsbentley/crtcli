@@ -1,4 +1,4 @@
-use crate::args::{TenantBuilder, TenantConfig};
+use crate::args::{TenantConfig, TenantConfigBuilder};
 use rcgen::{
     Certificate, CertificateParams, DistinguishedName, DnType, DnValue, KeyIdMethod, KeyPair,
     SanType, PKCS_ECDSA_P384_SHA384,
@@ -36,19 +36,20 @@ impl ServerCertificate {
         params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).expect("NOT WORKING"));
         params.key_identifier_method = KeyIdMethod::Sha256;
 
-        // DN
+        let broker_amount = config.broker_amount.get();
+        let broker_prefix = config.broker_prefix;
         let url = config.environment.url();
-        let dn_postfix = format!("{}.{}", config.name, &url);
+
+        // DN
+        let common_name = format!("{}.{}.{}", &broker_prefix, config.name, &url);
         // println!("{dn_postfix}");
 
-        params.distinguished_name = Self::extend_distinguished_name(dn_postfix);
+        params.distinguished_name = Self::extend_distinguished_name(common_name);
         // Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
 
         // SAN
         // TODO: remove hardcoded broker values
         let san_postfix = format!("{}.{}", config.name, &url);
-        let broker_amount = config.broker_amount.get();
-        let broker_prefix = config.broker_prefix;
 
         params.subject_alt_names = Self::get_brokers(broker_amount, broker_prefix, san_postfix);
 
