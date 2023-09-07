@@ -1,11 +1,12 @@
 mod args;
 mod ca_cert;
 mod entity;
+mod server_cert;
 
 use args::{BrokerAmount, Environment, InjectDSH, TenantBuilder, TenantConfig};
 use ca_cert::Ca;
 use entity::Entity;
-use entity::ServerCertificate;
+use server_cert::ServerCertificate;
 use sqlx::{migrate::MigrateDatabase, Sqlite};
 use std::fs;
 
@@ -45,7 +46,7 @@ async fn main() {
         .name("tenantname".to_string())
         .environment(Environment::POC)
         .passphrase("test".to_string())
-        .broker_prefix("broker".to_string())
+        .broker_prefix("helloooo".to_string())
         .broker_amount(BrokerAmount::Custom(3))
         .inject_dsh(InjectDSH::False)
         .build();

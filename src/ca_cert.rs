@@ -28,6 +28,7 @@ impl Ca {
         Path::new(ca_cert_path).exists()
     }
 
+    // TODO: standardize the location of the certs/ input as variable
     pub fn from_file() -> Ca {
         let ca_cert_path = fs::read_to_string("certs/rootca.pem").unwrap();
         let ca_key_path = fs::read_to_string("certs/rootca.key").unwrap();
