@@ -1,6 +1,8 @@
+mod args;
 mod ca_cert;
 mod entity;
 
+use args::{BrokerAmount, Environment, InjectDSH, TenantBuilder, TenantConfig};
 use ca_cert::Ca;
 use entity::Entity;
 use entity::ServerCertificate;
@@ -25,8 +27,11 @@ async fn main() {
     // CA
 
     let ca = Ca::new();
-    // let ca_cert = &ca.cert.serialize_pem().unwrap();
-    // let ca_private_key = &ca.cert.serialize_private_key_pem();
+    // let ca_cert = ca.cert.serialize_private_key_pem();
+    // let ca_key = ca
+    //     .cert
+    //     .serialize_pem()
+    //     .expect("umable to load cert into pem");
 
     // ENTITY
     let entity = Entity::new();
@@ -34,8 +39,18 @@ async fn main() {
     let entity_csr = entity.create_csr();
     let entity_cert = ca.sign_cert(&entity.cert);
 
+    // TODO: try test out all of the builder patterns
     // SERVER
-    let server = ServerCertificate::new();
+    let server_config = TenantBuilder::new()
+        .name("tenantname".to_string())
+        .environment(Environment::POC)
+        .passphrase("test".to_string())
+        .broker_prefix("broker".to_string())
+        .broker_amount(BrokerAmount::Custom(3))
+        .inject_dsh(InjectDSH::False)
+        .build();
+
+    let server = ServerCertificate::new(server_config);
     let server_key = server.cert.serialize_private_key_pem();
     let server_csr = server.create_csr();
     let server_cert = ca.sign_cert(&server.cert);
@@ -43,8 +58,6 @@ async fn main() {
     println!("{server_cert} {server_key}");
 
     fs::create_dir_all("certs/").unwrap();
-    // fs::write("certs/rootca.pem", ca_cert).unwrap();
-    // fs::write("certs/rootca.key", ca_private_key).unwrap();
 
     fs::write("certs/entity.pem", entity_cert).unwrap();
     fs::write("certs/entitycsr.pem", entity_csr).unwrap();
@@ -54,34 +67,3 @@ async fn main() {
     fs::write("certs/servercsr.pem", server_csr).unwrap();
     fs::write("certs/server.key", server_key).unwrap();
 }
-
-//     let mut dn = DistinguishedName::new();
-//     dn.push(
-//         DnType::CommonName,
-//         DnValue::PrintableString("Test Root CA ECC".to_string()),
-//     );
-//
-//     // SAN
-//     let alternative_name = SanType::DnsName(String::from("test"));
-//     let san: Vec<SanType> = vec![alternative_name];
-//
-//     // adjust params
-//     let mut params = CertificateParams::new(vec!["test".to_string()]);
-//     params.distinguished_name = dn;
-//     params.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
-//     params.subject_alt_names = san;
-//
-//     // // gen seperate private key
-//     // let key = KeyPair::generate(&PKCS_ECDSA_P256_SHA256).unwrap();
-//     // let pem = key.serialize_pem();
-//
-//     // cert
-//     let cert = Certificate::from_params(params).unwrap();
-//
-//     let cert_pem = cert.serialize_pem().unwrap();
-//     let private_key = cert.serialize_private_key_pem();
-//
-//     println!("{private_key}");
-//     println!("{cert_pem}");
-//     // println!("{}", pem);
-// }

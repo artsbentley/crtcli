@@ -1,3 +1,4 @@
+use crate::args::{TenantBuilder, TenantConfig};
 use rcgen::{
     Certificate, CertificateParams, DistinguishedName, DnType, DnValue, KeyIdMethod, KeyPair,
     SanType, PKCS_ECDSA_P384_SHA384,
@@ -45,44 +46,43 @@ pub struct ServerCertificate {
 */
 
 impl ServerCertificate {
-    pub fn new() -> Self {
+    pub fn new(config: TenantConfig) -> Self {
         let mut params = CertificateParams::default();
 
         params.not_before = time::OffsetDateTime::now_utc();
         params.not_after = time::OffsetDateTime::now_utc() + time::Duration::days(365 * 20);
+
         params.alg = &PKCS_ECDSA_P384_SHA384;
-        params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).unwrap());
+        params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).expect("NOT WORKING"));
         params.key_identifier_method = KeyIdMethod::Sha256;
 
-        params.distinguished_name =
-            Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
-        params.subject_alt_names = Self::get_brokers(10, "asml-01.poc.kpn-dsh.com".to_string());
+        // DN
+        let url = config.environment.url();
+        let dn_postfix = format!("{}.{}", config.name, &url);
+        // println!("{dn_postfix}");
+
+        params.distinguished_name = Self::extend_distinguished_name(dn_postfix);
+        // Self::get_distinguished_name("broker.kafka.asml-01.poc.kpn-dsh.com".to_string());
+
+        // SAN
+        // TODO: remove hardcoded borker values
+        let san_postfix = format!("{}.{}", config.name, &url);
+        let broker_amount = config.broker_amount.get();
+
+        params.subject_alt_names = Self::get_brokers(broker_amount, san_postfix);
 
         let cert = Certificate::from_params(params).unwrap();
         ServerCertificate { cert }
     }
 
-    pub fn get_distinguished_name(common_name: String) -> DistinguishedName {
+    pub fn extend_distinguished_name(common_name: String) -> DistinguishedName {
         let mut dn = DistinguishedName::new();
 
         dn.push(DnType::CommonName, DnValue::PrintableString(common_name));
-        dn.push(
-            DnType::OrganizationName,
-            DnValue::PrintableString("Koninklijke KPN N.V.".to_string()),
-        );
-        dn.push(
-            DnType::CountryName,
-            DnValue::PrintableString("NL".to_string()),
-        );
-        dn.push(
-            DnType::LocalityName,
-            DnValue::PrintableString("Rotterdam".to_string()),
-        );
-        dn.push(
-            DnType::StateOrProvinceName,
-            DnValue::PrintableString("Zuid-Holland".to_string()),
-        );
-
+        dn.push(DnType::OrganizationName, "Koninklijke KPN N.V.");
+        dn.push(DnType::CountryName, "NL");
+        dn.push(DnType::LocalityName, "Rotterdam");
+        dn.push(DnType::StateOrProvinceName, "Zuid-Holland");
         dn
     }
 

@@ -22,8 +22,7 @@ impl Ca {
         Self::create_ca()
     }
 
-    // exists: return enum with string
-
+    // NOTE:  better solution: exists; return enum with string of cert
     pub fn exists() -> bool {
         let ca_cert_path = "certs/rootca.pem";
         Path::new(ca_cert_path).exists()
@@ -70,14 +69,17 @@ impl Ca {
         ];
 
         let cert = Certificate::from_params(params).unwrap();
-        // let cert_pem = cert.serialize_pem().unwrap();
 
-        // TODO: wrap creation of files into function
+        // TODO:: wrap creation fo files into function:
+        //
+        // let cert_pem = cert.serialize_pem().unwrap();
         let ca_cert = cert.serialize_pem().unwrap();
         let ca_private_key = cert.serialize_private_key_pem();
 
+        fs::create_dir_all("certs/").unwrap();
         fs::write("certs/rootca.pem", ca_cert).unwrap();
         fs::write("certs/rootca.key", ca_private_key).unwrap();
+
         Ca { cert }
     }
 
