@@ -6,10 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+
 time = "0.3.28"
 tokio = { version = "1.20.0", features = ["macros", "rt-multi-thread"] }
 pem = "3.0.2"
 rcgen = { version = "0.11.1", features = ["pem", "x509-parser"] }
 sqlx = { version = "0.7.1", features = ["runtime-tokio-native-tls", "sqlite"] }
-clap = "4.3.23"
 x509-parser = "0.15.1"
+clap = { version = "4", features = ["derive"] }

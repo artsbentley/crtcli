@@ -39,7 +39,7 @@ pub enum Environment {
 impl Environment {
     pub fn url(&self) -> String {
         match self {
-            Environment::POC => "poc.kpn-dsh.com".to_string(),
+            Environment::POC => "test".to_string(),
             Environment::PROD => "prod".to_string(),
             Environment::PRODLZ => "prodlz".to_string(),
             Environment::NPLZ => "nplz".to_string(),

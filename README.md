@@ -5,3 +5,5 @@
 ## wishes:
 
 - i want to be able to create a custom CA per tenant/ use-case so that the self signed certs dont have access to other tenants
+
+- as a user i want to be able to supply configuration with flags, but also as an option with a (yaml) config file

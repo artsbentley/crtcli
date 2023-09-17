@@ -1,4 +1,4 @@
-use crate::args::{TenantConfigBuilder, TenantConfig};
+use crate::args::{TenantConfig, TenantConfigBuilder};
 use rcgen::{
     Certificate, CertificateParams, DistinguishedName, DnType, DnValue, KeyIdMethod, KeyPair,
     SanType, PKCS_ECDSA_P384_SHA384,
