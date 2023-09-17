@@ -35,49 +35,46 @@ async fn main() {
     let args: CrtCliArgs = CrtCliArgs::parse();
 
     match args.cert_type {
-        CertificateType::Server(server_command) => match server_command.command {
-            ServerSubCommand::Sign(config) => {
-                // TODO: get the PossibleValues attribute to work, this solution is horrible
-                match config.environment.as_str() {
-                    "dev" | "prod" | "poc" => {
-                        println!("Environment: {}", config.environment);
-                    }
-                    _ => {
-                        eprintln!("Error: Invalid environment option. Choose from 'dev', 'test', or 'prod'.");
-                        //exit
-                        exit(1);
-                    }
+        CertificateType::Server(server_command) => {
+            match server_command.command {
+                ServerSubCommand::Sign(config) => {
+                    // TODO: get the PossibleValues attribute to work, this solution is horrible
+                    let environment = Environment::from_str(&config.environment).unwrap();
+                    println!("{:?} {:?}", config.tenantname, config.broker_amount);
+
+                    // TODO: use existing CA or give option for user to decide
+                    let ca = Ca::new();
+
+                    // TODO: parse the argument inputs to builder
+                    let server_config = TenantConfigBuilder::new()
+                        .name(config.tenantname)
+                        // TODO: match statement to select environment enum from cli args
+                        .environment(environment)
+                        // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
+                        // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
+                        .passphrase(config.passphrase)
+                        .broker_prefix(config.broker_prefix)
+                        // TODO: might enum might not be the solution for this
+                        .broker_amount(BrokerAmount::Custom(config.broker_amount))
+                        .inject_dsh(InjectDSH::False)
+                        .build();
+
+                    let server = ServerCertificate::new(server_config);
+
+                    let server_key = server.cert.serialize_private_key_pem();
+                    let server_csr = server.create_csr();
+                    let server_cert = ca.sign_cert(&server.cert);
+
+                    fs::write("certs/server.pem", &server_cert).unwrap();
+                    fs::write("certs/servercsr.pem", &server_csr).unwrap();
+                    fs::write("certs/server.key", &server_key).unwrap();
+
+                    println!("{server_cert} {server_key}");
+                    // TODO: save + validate certs
                 }
-                println!("{:?} {:?}", config.tenantname, config.broker_amount);
-
-                // TODO: use existing CA or give option for user to decide
-                let ca = Ca::new();
-
-                // TODO: parse the argument inputs to builder
-                let server_config = TenantConfigBuilder::new()
-                    .name(config.tenantname)
-                    // TODO: match statement to select environment enum from cli args
-                    .environment(Environment::POC)
-                    // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
-                    // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
-                    .passphrase(config.passphrase)
-                    .broker_prefix(config.broker_prefix)
-                    // TODO: might enum might not be the solution for this
-                    .broker_amount(BrokerAmount::Custom(config.broker_amount))
-                    .inject_dsh(InjectDSH::False)
-                    .build();
-
-                let server = ServerCertificate::new(server_config);
-
-                let server_key = server.cert.serialize_private_key_pem();
-                let server_csr = server.create_csr();
-                let server_cert = ca.sign_cert(&server.cert);
-
-                println!("{server_cert} {server_key}");
-                // TODO: save + validate certs
+                ServerSubCommand::Csr(_config) => {}
             }
-            ServerSubCommand::Csr(_config) => {}
-        },
+        }
         CertificateType::Client(client_command) => match client_command.command {
             ClientSubCommand::Create(_config) => {}
             ClientSubCommand::Renew(_config) => {}

@@ -47,6 +47,18 @@ impl Environment {
     }
 }
 
+impl Environment {
+    pub fn from_str(s: &str) -> Result<Self, &'static str> {
+        match s {
+            "dev" => Ok(Environment::POC),
+            "test" => Ok(Environment::PROD),
+            "prod" => Ok(Environment::PRODLZ),
+            "nplz" => Ok(Environment::NPLZ),
+            _ => Err("Invalid environment option. Choose from 'dev', 'test', or 'prod'."),
+        }
+    }
+}
+
 pub enum BrokerAmount {
     CSRDefault,
     SelfSignedDefault,
