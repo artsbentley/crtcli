@@ -14,6 +14,7 @@
 // *
 // * - prompt for API keyp
 
+// TODO: add duration of validity for the cert
 pub struct TenantConfig {
     pub name: String,
     pub environment: Environment,
@@ -40,7 +41,7 @@ impl Environment {
     pub fn url(&self) -> String {
         match self {
             // TODO: make sure capitalization works
-            Environment::POC => "poc.dsh.com".to_string(),
+            Environment::POC => "poc.kpn-dsh.com".to_string(),
             Environment::PROD => "prodlz.dsh.com".to_string(),
             Environment::PRODLZ => "prodlz.dsh.com".to_string(),
             Environment::NPLZ => "nplz.dsh.com".to_string(),

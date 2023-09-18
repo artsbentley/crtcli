@@ -29,24 +29,30 @@ impl ServerCertificate {
     pub fn new(config: TenantConfig) -> Self {
         let mut params = CertificateParams::default();
 
+        // TODO: read lifetime from config, adjust config to contain it aswell
         params.not_before = time::OffsetDateTime::now_utc();
-        params.not_after = time::OffsetDateTime::now_utc() + time::Duration::days(365 * 20);
+        params.not_after = time::OffsetDateTime::now_utc() + time::Duration::days(30);
 
+        // NOTE: more research needed about the chosen encryption algorithms, current choice is at
+        // random
         params.alg = &PKCS_ECDSA_P384_SHA384;
         params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).expect("NOT WORKING"));
         params.key_identifier_method = KeyIdMethod::Sha256;
 
-        let broker_amount = config.broker_amount.get();
         let broker_prefix = config.broker_prefix;
         let url = config.environment.url();
 
         // DN
-        let common_name = format!("{}.{}.{}", &broker_prefix, config.name, &url);
+        let common_name = format!("{}.kafka.{}.{}", &broker_prefix, config.name, &url);
         params.distinguished_name = Self::extend_distinguished_name(common_name);
 
         // SAN
+        let broker_amount = config.broker_amount.get();
         let san_postfix = format!("{}.{}", config.name, &url);
         params.subject_alt_names = Self::get_brokers(broker_amount, broker_prefix, san_postfix);
+
+        // TODO: read out passphrase from config and create encrypted key with openssl commands:
+        // https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
 
         let cert = Certificate::from_params(params).unwrap();
         ServerCertificate { cert }

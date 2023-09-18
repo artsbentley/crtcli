@@ -59,6 +59,8 @@ pub enum CaSubCommand {
     Create(CreateCa),
     /// Create, sign and store a client certificate
     Sign(SignWithCa),
+    // TODO: subcommand to retrieve the CA chain; with optional flag of a certificate, so that the
+    // CA chain of the signer can be retrieved, this can also be a simple query in a db
 }
 
 #[derive(Debug, Args)]
