@@ -39,10 +39,11 @@ pub enum Environment {
 impl Environment {
     pub fn url(&self) -> String {
         match self {
-            Environment::POC => "test".to_string(),
-            Environment::PROD => "prod".to_string(),
-            Environment::PRODLZ => "prodlz".to_string(),
-            Environment::NPLZ => "nplz".to_string(),
+            // TODO: make sure capitalization works
+            Environment::POC => "poc.dsh.com".to_string(),
+            Environment::PROD => "prodlz.dsh.com".to_string(),
+            Environment::PRODLZ => "prodlz.dsh.com".to_string(),
+            Environment::NPLZ => "nplz.dsh.com".to_string(),
         }
     }
 }
@@ -50,15 +51,16 @@ impl Environment {
 impl Environment {
     pub fn from_str(s: &str) -> Result<Self, &'static str> {
         match s {
-            "dev" => Ok(Environment::POC),
-            "test" => Ok(Environment::PROD),
-            "prod" => Ok(Environment::PRODLZ),
+            "poc" => Ok(Environment::POC),
+            "prod" => Ok(Environment::PROD),
+            "prodlz" => Ok(Environment::PRODLZ),
             "nplz" => Ok(Environment::NPLZ),
-            _ => Err("Invalid environment option. Choose from 'dev', 'test', or 'prod'."),
+            _ => Err("Invalid environment option. Choose from ..."),
         }
     }
 }
 
+// TODO: reconsider if this should be an enum
 pub enum BrokerAmount {
     CSRDefault,
     SelfSignedDefault,
