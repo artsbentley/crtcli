@@ -26,7 +26,7 @@ pub struct ServerCertificate {
 */
 
 impl ServerCertificate {
-    pub fn new(config: TenantConfig) -> Self {
+    pub fn new(config: &TenantConfig) -> Self {
         let mut params = CertificateParams::default();
 
         // TODO: read lifetime from config, adjust config to contain it aswell
@@ -39,7 +39,7 @@ impl ServerCertificate {
         params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).expect("NOT WORKING"));
         params.key_identifier_method = KeyIdMethod::Sha256;
 
-        let broker_prefix = config.broker_prefix;
+        let broker_prefix = config.broker_prefix.clone();
         let url = config.environment.url();
 
         // DN

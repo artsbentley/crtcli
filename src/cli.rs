@@ -40,7 +40,7 @@ pub struct CaCommand {
 #[derive(Debug, Subcommand)]
 pub enum ClientSubCommand {
     /// Create, sign and store a server certificate
-    Create(CreateClientCert),
+    Sign(CreateClientCert),
     /// Create, sign and store a client certificate
     Renew(RenewClientCert),
 }
@@ -66,7 +66,7 @@ pub enum CaSubCommand {
 #[derive(Debug, Args)]
 pub struct CreateClientCert {
     /// for now any random string for testing purposes
-    pub name: String,
+    pub common_name: String,
 }
 #[derive(Debug, Args)]
 pub struct RenewClientCert {

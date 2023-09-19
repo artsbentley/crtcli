@@ -9,11 +9,11 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn new() -> Self {
-        let mut params = CertificateParams::new(vec!["entity.xavamedia.nl".to_owned()]);
+    pub fn new(common_name: String) -> Self {
+        let mut params = CertificateParams::new(vec![common_name.to_owned()]);
         params
             .distinguished_name
-            .push(DnType::CommonName, "entity.xavamedia.nl");
+            .push(DnType::CommonName, common_name);
         Self {
             cert: Certificate::from_params(params).unwrap(),
         }

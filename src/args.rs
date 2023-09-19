@@ -15,6 +15,7 @@
 // * - prompt for API keyp
 
 // TODO: add duration of validity for the cert
+#[derive(Clone)]
 pub struct TenantConfig {
     pub name: String,
     pub environment: Environment,
@@ -30,6 +31,7 @@ pub struct TenantConfig {
 //     //example: broker.kafka.asml-01.poc.kpn-dsh.com
 // }
 
+#[derive(Copy, Clone)]
 pub enum Environment {
     POC,
     PROD,
@@ -42,14 +44,12 @@ impl Environment {
         match self {
             // TODO: make sure capitalization works
             Environment::POC => "poc.kpn-dsh.com".to_string(),
-            Environment::PROD => "prodlz.dsh.com".to_string(),
-            Environment::PRODLZ => "prodlz.dsh.com".to_string(),
-            Environment::NPLZ => "nplz.dsh.com".to_string(),
+            Environment::PROD => "TODO".to_string(),
+            Environment::PRODLZ => "TODO".to_string(),
+            Environment::NPLZ => "TODO".to_string(),
         }
     }
-}
 
-impl Environment {
     pub fn from_str(s: &str) -> Result<Self, &'static str> {
         match s {
             "poc" => Ok(Environment::POC),
@@ -59,9 +59,28 @@ impl Environment {
             _ => Err("Invalid environment option. Choose from ..."),
         }
     }
+
+    pub fn bearer_endpoint(&self) -> String {
+        match self {
+            Environment::POC => "https://auth.prod.cp.kpn-dsh.com/auth/realms/poc-dsh/protocol/openid-connect/token".to_string(),
+            Environment::PROD => "https://auth.prod.cp.kpn-dsh.com/auth/realms/prod-dsh/protocol/openid-connect/token".to_string(),
+            Environment::PRODLZ => "https://auth.prod.cp.kpn-dsh.com/auth/realms/prodlz-dsh/protocol/openid-connect/token".to_string(),
+            Environment::NPLZ => "https://auth.prod.cp.kpn-dsh.com/auth/realms/nplz-dsh/protocol/openid-connect/token".to_string(),
+        }
+    }
+
+    pub fn api_client_id(&self) -> String {
+        match self {
+            Environment::POC => "poc-dsh".to_string(),
+            Environment::PROD => "prod-dsh".to_string(),
+            Environment::PRODLZ => "prodlz-dsh".to_string(),
+            Environment::NPLZ => "nplz-dsh".to_string(),
+        }
+    }
 }
 
 // TODO: reconsider if this should be an enum
+#[derive(Clone)]
 pub enum BrokerAmount {
     CSRDefault,
     SelfSignedDefault,
@@ -78,6 +97,7 @@ impl BrokerAmount {
     }
 }
 
+#[derive(Clone)]
 pub enum InjectDSH {
     True(String),
     False,

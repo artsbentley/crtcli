@@ -1,10 +1,13 @@
 #![allow(unused_imports, dead_code)]
 
+mod api;
 mod args;
 mod ca_cert;
 mod cli;
 mod entity;
 mod server_cert;
+
+use api::dsh_api::{process_tls, DshApi};
 
 use args::{BrokerAmount, Environment, InjectDSH, TenantConfig, TenantConfigBuilder};
 use ca_cert::Ca;
@@ -30,13 +33,14 @@ async fn main() {
     } else {
         println!("Database already exists");
     }
-    // fn main() {
 
     let args: CrtCliArgs = CrtCliArgs::parse();
 
     match args.cert_type {
+        // SERVER
         CertificateType::Server(server_command) => {
             match server_command.command {
+                // SIGN SERVER
                 ServerSubCommand::Sign(config) => {
                     // TODO: get the PossibleValues attribute to work, this solution is horrible
                     let environment = Environment::from_str(&config.environment).unwrap();
@@ -56,31 +60,75 @@ async fn main() {
                         .broker_prefix(config.broker_prefix)
                         // TODO: might enum might not be the solution for this
                         .broker_amount(BrokerAmount::Custom(config.broker_amount))
-                        .inject_dsh(InjectDSH::False)
+                        .inject_dsh(InjectDSH::True(
+                            "e4LADzqpkxvh0GdG8uIy8IKrAaf5A3xm".to_string(),
+                        ))
                         .build();
 
-                    let server = ServerCertificate::new(server_config);
+                    let server = ServerCertificate::new(&server_config);
 
                     let server_key = server.cert.serialize_private_key_pem();
                     let server_csr = server.create_csr();
                     let server_cert = ca.sign_cert(&server.cert);
 
+                    // let api = DshApi::new(
+                    //     server_config.environment,
+                    //     server_config.name,
+                    //     "e4LADzqpkxvh0GdG8uIy8IKrAaf5A3xm".to_string(),
+                    // );
+
+                    let mut api = DshApi::new(&server_config);
+                    let bearer = api.retrieve_token().await.unwrap();
+                    api.initialize_bearer_token().await.unwrap();
+                    api.send_secret("test", "test").await.unwrap();
+                    println!("{bearer}");
+
                     fs::write("certs/server.pem", &server_cert).unwrap();
                     fs::write("certs/servercsr.pem", &server_csr).unwrap();
                     fs::write("certs/server.key", &server_key).unwrap();
 
-                    println!("{server_cert} {server_key}");
+                    let proccessed_tls = process_tls(&server_cert);
+                    println!("{server_cert}");
+                    println!("{proccessed_tls}");
+                    fs::write("certs/api_servercsr.pem", &proccessed_tls).unwrap();
+                    // println!("{server_cert} {server_key}");
                     // TODO: save + validate certs
                 }
+
+                // CREATE SERVER CSR
                 ServerSubCommand::Csr(_config) => {}
             }
         }
+        // CLIENT
         CertificateType::Client(client_command) => match client_command.command {
-            ClientSubCommand::Create(_config) => {}
+            // SIGN CLIENT
+            ClientSubCommand::Sign(config) => {
+                let ca = Ca::new();
+
+                let entity = Entity::new(config.common_name);
+                let entity_key = entity.cert.serialize_private_key_pem();
+                let entity_csr = entity.create_csr();
+                let entity_cert = ca.sign_cert(&entity.cert);
+
+                println!("{entity_cert} {entity_key}");
+
+                // println!("{:?}", token);
+
+                fs::write("certs/entity.pem", entity_cert).unwrap();
+                fs::write("certs/entitycsr.pem", entity_csr).unwrap();
+                fs::write("certs/entity.key", entity_key).unwrap();
+            }
+
+            // RENEW CLIENT?
             ClientSubCommand::Renew(_config) => {}
         },
+
+        // CA
         CertificateType::Ca(ca_command) => match ca_command.command {
+            // CREATE CA
             CaSubCommand::Create(_config) => {}
+
+            // SIGN ANYTHING WITH CA
             CaSubCommand::Sign(_config) => {}
         },
     }
