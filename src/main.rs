@@ -7,7 +7,7 @@ mod cli;
 mod entity;
 mod server_cert;
 
-use api::dsh_api::{process_tls, DshApi};
+use api::dsh_api::DshApi;
 
 use args::{BrokerAmount, Environment, InjectDSH, TenantConfig, TenantConfigBuilder};
 use ca_cert::Ca;
@@ -36,15 +36,21 @@ async fn main() {
 
     let args: CrtCliArgs = CrtCliArgs::parse();
 
+    // NOTE: there is no way the current command should take as long as it does, not being run
+    // async?
     match args.cert_type {
         // SERVER
         CertificateType::Server(server_command) => {
             match server_command.command {
                 // SIGN SERVER
                 ServerSubCommand::Sign(config) => {
-                    // TODO: get the PossibleValues attribute to work, this solution is horrible
+                    // TODO: get the PossibleValues attribute to work, this solution is not great
                     let environment = Environment::from_str(&config.environment).unwrap();
-                    println!("{:?} {:?}", config.tenantname, config.broker_amount);
+
+                    let inject_dsh = match config.inject_dsh.as_str() {
+                        "" => InjectDSH::False,
+                        _ => InjectDSH::True(config.inject_dsh),
+                    };
 
                     // TODO: use existing CA or give option for user to decide
                     let ca = Ca::new();
@@ -58,45 +64,75 @@ async fn main() {
                         // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
                         .passphrase(config.passphrase)
                         .broker_prefix(config.broker_prefix)
-                        // TODO: might enum might not be the solution for this
                         .broker_amount(BrokerAmount::Custom(config.broker_amount))
-                        .inject_dsh(InjectDSH::True(
-                            "e4LADzqpkxvh0GdG8uIy8IKrAaf5A3xm".to_string(),
-                        ))
+                        .inject_dsh(inject_dsh)
                         .build();
+
+                    // e4LADzqpkxvh0GdG8uIy8IKrAaf5A3xm
 
                     let server = ServerCertificate::new(&server_config);
 
+                    // NOTE: consideration; wrapping the end result certs in an own struct, with
+                    // addional methods to handle the certs, such as saving and validating
                     let server_key = server.cert.serialize_private_key_pem();
                     let server_csr = server.create_csr();
                     let server_cert = ca.sign_cert(&server.cert);
 
-                    // let api = DshApi::new(
-                    //     server_config.environment,
-                    //     server_config.name,
-                    //     "e4LADzqpkxvh0GdG8uIy8IKrAaf5A3xm".to_string(),
-                    // );
+                    // TODO: match the enum generated above if a DSHAPI struct and functions
+                    // should be created and called
 
-                    let mut api = DshApi::new(&server_config);
-                    let bearer = api.retrieve_token().await.unwrap();
-                    api.initialize_bearer_token().await.unwrap();
-                    api.send_secret("test", "test").await.unwrap();
-                    println!("{bearer}");
+                    // REST calls
+                    match server_config.inject_dsh {
+                        InjectDSH::True(_) => {
+                            let mut api = DshApi::new(&server_config);
+                            let bearer = api.retrieve_token().await.unwrap();
+                            api.initialize_bearer_token().await.unwrap();
+
+                            api.send_secret("testing", &server_cert).await.unwrap();
+                            println!("{bearer}");
+                        }
+                        InjectDSH::False => {}
+                    }
+
+                    // TODO: create naming convention fo the certs close to the config struct
 
                     fs::write("certs/server.pem", &server_cert).unwrap();
                     fs::write("certs/servercsr.pem", &server_csr).unwrap();
                     fs::write("certs/server.key", &server_key).unwrap();
 
-                    let proccessed_tls = process_tls(&server_cert);
                     println!("{server_cert}");
-                    println!("{proccessed_tls}");
-                    fs::write("certs/api_servercsr.pem", &proccessed_tls).unwrap();
-                    // println!("{server_cert} {server_key}");
                     // TODO: save + validate certs
                 }
 
                 // CREATE SERVER CSR
-                ServerSubCommand::Csr(_config) => {}
+                ServerSubCommand::Csr(config) => {
+                    let environment = Environment::from_str(&config.environment).unwrap();
+                    let server_config = TenantConfigBuilder::new()
+                        .name(config.tenantname)
+                        // TODO: match statement to select environment enum from cli args
+                        .environment(environment)
+                        // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
+                        // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
+                        .passphrase(config.passphrase)
+                        .broker_prefix(config.broker_prefix)
+                        .broker_amount(BrokerAmount::CSRDefault)
+                        .build();
+
+                    let server = ServerCertificate::new(&server_config);
+
+                    // NOTE: consideration; wrapping the end result certs in an own struct, with
+                    // addional methods to handle the certs, such as saving and validating
+                    let server_key = server.cert.serialize_private_key_pem();
+                    let server_csr = server.create_csr();
+
+                    // TODO: create a text with the instructions for singing of the cert through
+                    // KPN  as a CA -> also add instructions to view the cert wih openssl commands
+                    // TODO: create naming convention fo the certs close to the config struct
+                    fs::write("certs/csrtest.pem", &server_csr).unwrap();
+                    fs::write("certs/csrtest.key", &server_key).unwrap();
+
+                    // TODO: save + validate certs
+                }
             }
         }
         // CLIENT

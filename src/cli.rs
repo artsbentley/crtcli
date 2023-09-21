@@ -88,8 +88,8 @@ pub struct ServerCertConfig {
     pub broker_prefix: String,
     #[clap(long, default_value = "10")]
     pub broker_amount: u8,
-    #[clap(long, default_value = "false")]
-    pub inject_dsh: bool,
+    #[clap(long, default_value = "")]
+    pub inject_dsh: String,
 }
 
 //     .name("tenantname".to_string())
@@ -103,7 +103,17 @@ pub struct ServerCertConfig {
 #[derive(Debug, Args, Clone)]
 pub struct CreateServerCsr {
     /// for now any random string for testing purposes
-    pub name: String,
+    #[clap(long, default_value = "test")]
+    pub tenantname: String,
+    #[clap(long, default_value = "poc")]
+    pub environment: String,
+    // #[clap(PossibleValue::new("dev", "test", "prod"))]
+    #[clap(long, default_value = "test")]
+    pub passphrase: String,
+    #[clap(long, default_value = "broker")]
+    pub broker_prefix: String,
+    #[clap(long, default_value = "10")]
+    pub broker_amount: u8,
 }
 
 #[derive(Debug, Args)]

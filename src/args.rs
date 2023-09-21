@@ -25,11 +25,11 @@ pub struct TenantConfig {
     pub inject_dsh: InjectDSH,
 }
 
-// impl TenantConfig {
-//     fn get_common_name(&self) -> String {}
-//
-//     //example: broker.kafka.asml-01.poc.kpn-dsh.com
-// }
+impl TenantConfig {
+    pub fn format_save_name(&self) -> String {
+        format!("{}-{}", self.name, "tenant-config.toml").to_string()
+    }
+}
 
 #[derive(Copy, Clone)]
 pub enum Environment {

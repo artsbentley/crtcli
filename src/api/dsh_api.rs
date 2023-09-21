@@ -15,10 +15,6 @@ pub enum ApiError {
     HttpRequestFailed(#[from] reqwest::Error),
 }
 
-pub fn process_tls(input_str: &str) -> String {
-    input_str.replace("\n", "\\n")
-}
-
 pub struct DshApi {
     pub environment: Environment,
     pub tenant: String,
