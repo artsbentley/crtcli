@@ -52,9 +52,18 @@ impl Ca {
         dn.push(rcgen::DnType::CommonName, which);
         params.distinguished_name = dn;
 
-        let key_pair = KeyPair::generate(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        // let key_pair = KeyPair::generate(&rcgen::PKCS_RSA_SHA256).unwrap();
+        // params.key_pair = Some(key_pair);
+
+        let pkey: openssl::pkey::PKey<_> = openssl::rsa::Rsa::generate(2048)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let key_pair_pem = String::from_utf8(pkey.private_key_to_pem_pkcs8().unwrap()).unwrap();
+        let key_pair = rcgen::KeyPair::from_pem(&key_pair_pem).unwrap();
         params.key_pair = Some(key_pair);
-        params.alg = &rcgen::PKCS_ECDSA_P256_SHA256;
+
+        params.alg = &rcgen::PKCS_RSA_SHA256;
         params.use_authority_key_identifier_extension = true;
         params.not_before = time::OffsetDateTime::now_utc();
         params.not_after = time::OffsetDateTime::now_utc() + time::Duration::days(365 * 20);

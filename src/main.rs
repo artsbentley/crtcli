@@ -95,10 +95,16 @@ async fn main() {
                     }
 
                     // TODO: create naming convention fo the certs close to the config struct
+                    let directory = &server_config.format_directory_location();
+                    fs::create_dir_all(directory).unwrap();
+                    // fs::create_dir_all("certs/servercsr.pem", &server_csr).unwrap();
+                    // fs::create_dir_all("certs/server.key.pem", &server_key).unwrap();
+                    //
 
+                    // fs::write(directory+"hi", &server_cert).unwrap();
                     fs::write("certs/server.pem", &server_cert).unwrap();
                     fs::write("certs/servercsr.pem", &server_csr).unwrap();
-                    fs::write("certs/server.key", &server_key).unwrap();
+                    fs::write("certs/server.key.pem", &server_key).unwrap();
 
                     println!("{server_cert}");
                     // TODO: save + validate certs
@@ -128,8 +134,8 @@ async fn main() {
                     // TODO: create a text with the instructions for singing of the cert through
                     // KPN  as a CA -> also add instructions to view the cert wih openssl commands
                     // TODO: create naming convention fo the certs close to the config struct
-                    fs::write("certs/csrtest.pem", &server_csr).unwrap();
-                    fs::write("certs/csrtest.key", &server_key).unwrap();
+                    fs::write("certs/csr.pem", &server_csr).unwrap();
+                    fs::write("certs/csr.key", &server_key).unwrap();
 
                     // TODO: save + validate certs
                 }
@@ -168,47 +174,46 @@ async fn main() {
             CaSubCommand::Sign(_config) => {}
         },
     }
-
-    // // CA
-    // let ca = Ca::new();
-    // let ca_cert = ca.cert.serialize_private_key_pem();
-    // let ca_key = ca
-    //     .cert
-    //     .serialize_pem()
-    //     .expect("umable to load cert into pem");
-
-    // ENTITY
-    // let entity = Entity::new();
-    // let entity_key = entity.cert.serialize_private_key_pem();
-    // let entity_csr = entity.create_csr();
-    // let entity_cert = ca.sign_cert(&entity.cert);
-
-    // // SERVER
-    // let server_config = TenantConfigBuilder::new()
-    //     .name("tenantname".to_string())
-    //     .environment(Environment::POC)
-    //     // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
-    //     // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
-    //     .passphrase("test".to_string())
-    //     .broker_prefix("broker-1".to_string())
-    //     .broker_amount(BrokerAmount::Custom(3))
-    //     .inject_dsh(InjectDSH::False)
-    //     .build();
-    //
-    // let server = ServerCertificate::new(server_config);
-    // let server_key = server.cert.serialize_private_key_pem();
-    // let server_csr = server.create_csr();
-    // let server_cert = ca.sign_cert(&server.cert);
-    //
-    // println!("{server_cert} {server_key}");
-    //
-    // fs::create_dir_all("certs/").unwrap();
-    //
-    // fs::write("certs/entity.pem", entity_cert).unwrap();
-    // fs::write("certs/entitycsr.pem", entity_csr).unwrap();
-    // fs::write("certs/entity.key", entity_key).unwrap();
-    //
-    // fs::write("certs/server.pem", server_cert).unwrap();
-    // fs::write("certs/servercsr.pem", server_csr).unwrap();
-    // fs::write("certs/server.key", server_key).unwrap();
 }
+// // CA
+// let ca = Ca::new();
+// let ca_cert = ca.cert.serialize_private_key_pem();
+// let ca_key = ca
+//     .cert
+//     .serialize_pem()
+//     .expect("umable to load cert into pem");
+
+// ENTITY
+// let entity = Entity::new();
+// let entity_key = entity.cert.serialize_private_key_pem();
+// let entity_csr = entity.create_csr();
+// let entity_cert = ca.sign_cert(&entity.cert);
+
+// // SERVER
+// let server_config = TenantConfigBuilder::new()
+//     .name("tenantname".to_string())
+//     .environment(Environment::POC)
+//     // NOTE: passphrase not being used at the moment, rcgen might have difficulties in leaving
+//     // a fingerprint on the private key, see: https://stackoverflow.com/questions/72635424/how-to-create-a-fingerprint-in-rust-for-a-certficate-generated-with-the-rcgen-cr
+//     .passphrase("test".to_string())
+//     .broker_prefix("broker-1".to_string())
+//     .broker_amount(BrokerAmount::Custom(3))
+//     .inject_dsh(InjectDSH::False)
+//     .build();
+//
+// let server = ServerCertificate::new(server_config);
+// let server_key = server.cert.serialize_private_key_pem();
+// let server_csr = server.create_csr();
+// let server_cert = ca.sign_cert(&server.cert);
+//
+// println!("{server_cert} {server_key}");
+//
+// fs::create_dir_all("certs/").unwrap();
+//
+// fs::write("certs/entity.pem", entity_cert).unwrap();
+// fs::write("certs/entitycsr.pem", entity_csr).unwrap();
+// fs::write("certs/entity.key", entity_key).unwrap();
+//
+// fs::write("certs/server.pem", server_cert).unwrap();
+// fs::write("certs/servercsr.pem", server_csr).unwrap();
+// fs::write("certs/server.key", server_key).unwrap();

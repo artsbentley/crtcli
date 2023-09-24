@@ -26,8 +26,18 @@ pub struct TenantConfig {
 }
 
 impl TenantConfig {
-    pub fn format_save_name(&self) -> String {
-        format!("{}-{}", self.name, "tenant-config.toml").to_string()
+    pub fn format_save_name(&self, file_postfix: String) -> String {
+        format!(
+            "{}_{}_{}{}",
+            self.name,
+            self.environment.to_str(),
+            "server",
+            file_postfix
+        )
+    }
+
+    pub fn format_directory_location(&self) -> String {
+        format!("{}/{}/server/", self.environment.to_str(), self.name,)
     }
 }
 
@@ -35,6 +45,7 @@ impl TenantConfig {
 pub enum Environment {
     POC,
     PROD,
+    PUBLIC,
     PRODLZ,
     NPLZ,
 }
@@ -45,8 +56,19 @@ impl Environment {
             // TODO: make sure capitalization works
             Environment::POC => "poc.kpn-dsh.com".to_string(),
             Environment::PROD => "TODO".to_string(),
-            Environment::PRODLZ => "TODO".to_string(),
+            Environment::PRODLZ => "dsh-prod.dsh.prod.aws.kpn.com".to_string(),
+            Environment::PUBLIC => "prod.cp.kpn-dsh.com".to_string(),
             Environment::NPLZ => "TODO".to_string(),
+        }
+    }
+
+    pub fn to_str(&self) -> String {
+        match self {
+            Environment::POC => "poc".to_string(),
+            Environment::PROD => "prod".to_string(),
+            Environment::PRODLZ => "prodlz".to_string(),
+            Environment::PUBLIC => "public".to_string(),
+            Environment::NPLZ => "nplz".to_string(),
         }
     }
 
@@ -55,6 +77,7 @@ impl Environment {
             "poc" => Ok(Environment::POC),
             "prod" => Ok(Environment::PROD),
             "prodlz" => Ok(Environment::PRODLZ),
+            "public" => Ok(Environment::PUBLIC),
             "nplz" => Ok(Environment::NPLZ),
             _ => Err("Invalid environment option. Choose from ..."),
         }
@@ -63,9 +86,10 @@ impl Environment {
     pub fn bearer_endpoint(&self) -> String {
         match self {
             Environment::POC => "https://auth.prod.cp.kpn-dsh.com/auth/realms/poc-dsh/protocol/openid-connect/token".to_string(),
-            Environment::PROD => "https://auth.prod.cp.kpn-dsh.com/auth/realms/prod-dsh/protocol/openid-connect/token".to_string(),
-            Environment::PRODLZ => "https://auth.prod.cp.kpn-dsh.com/auth/realms/prodlz-dsh/protocol/openid-connect/token".to_string(),
-            Environment::NPLZ => "https://auth.prod.cp.kpn-dsh.com/auth/realms/nplz-dsh/protocol/openid-connect/token".to_string(),
+            Environment::PROD => "todo".to_string(),
+            Environment::PRODLZ => "https://auth.lz.lz-cp.dsh.np.aws.kpn.com/auth/realms/prod-lz-dsh/protocol/openid-connect/token ".to_string(),
+            Environment::PUBLIC => "https://auth.prod.cp.kpn-dsh.com/auth/realms/tt-dsh/protocol/openid-connect/token".to_string(),
+            Environment::NPLZ => "todo".to_string(),
         }
     }
 
@@ -73,7 +97,8 @@ impl Environment {
         match self {
             Environment::POC => "poc-dsh".to_string(),
             Environment::PROD => "prod-dsh".to_string(),
-            Environment::PRODLZ => "prodlz-dsh".to_string(),
+            Environment::PRODLZ => "prod-lz-dsh".to_string(),
+            Environment::PUBLIC => "prod-dsh".to_string(),
             Environment::NPLZ => "nplz-dsh".to_string(),
         }
     }

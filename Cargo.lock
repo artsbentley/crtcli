@@ -339,6 +339,7 @@ name = "crtcli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "openssl",
  "pem 3.0.2",
  "rcgen",
  "reqwest",
