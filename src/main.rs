@@ -17,23 +17,33 @@ use sqlx::{migrate::MigrateDatabase, Sqlite};
 use std::fs;
 use std::process::exit;
 
+use tracing::{error, info, Level};
+use tracing_subscriber::FmtSubscriber;
+
 use clap::Parser;
 use cli::*;
 
 const DB_URL: &str = "sqlite://sqlite.db";
 #[tokio::main]
 async fn main() {
+    // TRACING
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(Level::TRACE)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
     // SQL
     if !Sqlite::database_exists(DB_URL).await.unwrap_or(false) {
-        println!("Creating database {}", DB_URL);
+        info!("Creating database {}", DB_URL);
         match Sqlite::create_database(DB_URL).await {
-            Ok(_) => println!("Create db success"),
+            Ok(_) => info!("Create db success"),
             Err(error) => panic!("error: {}", error),
         }
     } else {
-        println!("Database already exists");
-    }
-
+        info!("Database already exists");
+    
+    // CLI
     let args: CrtCliArgs = CrtCliArgs::parse();
 
     // NOTE: there is no way the current command should take as long as it does, not being run
@@ -98,9 +108,9 @@ async fn main() {
                     let directory = &server_config.format_directory_location();
                     fs::create_dir_all(&directory).unwrap();
 
-                    let key_name = &server_config.format_save_name(".crt.pem".into());
+                    let key_name = &server_config.format_save_name(".key.pem".into());
                     let csr_name = &server_config.format_save_name(".csr.pem".into());
-                    let cert_name = &server_config.format_save_name(".key.pem".into());
+                    let cert_name = &server_config.format_save_name(".crt.pem".into());
 
                     fs::write(directory.clone() + cert_name, &server_cert).unwrap();
                     fs::write(directory.clone() + csr_name, &server_csr).unwrap();
@@ -143,7 +153,7 @@ async fn main() {
                     println!("{directory}");
                     fs::create_dir_all(&directory).unwrap();
 
-                    let key_name = &server_config.format_save_name(".crt.pem".into());
+                    let key_name = &server_config.format_save_name(".key.pem".into());
                     let csr_name = &server_config.format_save_name(".csr.pem".into());
 
                     fs::write(directory.clone() + csr_name, &server_csr).unwrap();

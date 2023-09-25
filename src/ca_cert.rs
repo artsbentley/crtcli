@@ -6,6 +6,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
+use tracing::info;
 // use std::{env, fs};
 
 pub struct Ca {
@@ -15,10 +16,10 @@ pub struct Ca {
 impl Ca {
     pub fn new() -> Ca {
         if Self::exists() {
-            println!("CA certificate exists");
+            info!("CA certificate exists");
             return Self::from_file();
         }
-        println!("CA certificate does not exist");
+        info!("CA certificate does not exist");
         Self::create_ca()
     }
 

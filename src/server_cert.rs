@@ -4,26 +4,16 @@ use rcgen::{
     SanType, PKCS_ECDSA_P384_SHA384, PKCS_RSA_SHA256,
 };
 
+use picky::key::PrivateKey;
+use picky::x509::csr::Csr;
+use picky::x509::name::{DirectoryName, NameAttr};
+use picky::{hash::HashAlgorithm, signature::SignatureAlgorithm};
+
+use tracing::info;
+
 pub struct ServerCertificate {
     pub cert: Certificate,
 }
-
-/*
-* - Tenant name?
-* - Which tenant environment?
-*   url
-*   common name
-*   api_client_id
-*
-*
-* - How many brokers do you want?
-* - Broker prefix
-*
-* - passphrase
-* - do you want to use self signed certs?
-*
-* - prompt for API keyp
-*/
 
 impl ServerCertificate {
     pub fn new(config: &TenantConfig) -> Self {
@@ -49,6 +39,13 @@ impl ServerCertificate {
             .unwrap();
         let key_pair_pem = String::from_utf8(pkey.private_key_to_pem_pkcs8().unwrap()).unwrap();
         let key_pair = rcgen::KeyPair::from_pem(&key_pair_pem).unwrap();
+
+        // // picky key creation
+        // info!("Generating keypair");
+        // let pkey = Self::generate_keypair().unwrap();
+        // let key_pair_pem = pkey.to_pem_str().unwrap();
+        // let key_pair = rcgen::KeyPair::from_pem(&key_pair_pem).unwrap();
+        //
         params.key_pair = Some(key_pair);
 
         let broker_prefix = config.broker_prefix.clone();
@@ -94,5 +91,12 @@ impl ServerCertificate {
 
     pub fn create_csr(&self) -> String {
         self.cert.serialize_request_pem().unwrap()
+    }
+
+    /// Generate a keypair with Picky
+    pub fn generate_keypair() -> Result<PrivateKey, Box<dyn std::error::Error>> {
+        let bits: usize = 4096;
+        let private_key = PrivateKey::generate_rsa(bits)?;
+        Ok(private_key)
     }
 }
