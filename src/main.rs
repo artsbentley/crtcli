@@ -44,7 +44,7 @@ async fn main() {
             match server_command.command {
                 // SIGN SERVER
                 ServerSubCommand::Sign(config) => {
-                    // TODO: get the PossibleValues attribute to work, this solution is not great
+                    // TODO: get the PossibleValues attribute to work, this solution is suboptimal
                     let environment = Environment::from_str(&config.environment).unwrap();
 
                     let inject_dsh = match config.inject_dsh.as_str() {
@@ -94,17 +94,17 @@ async fn main() {
                         InjectDSH::False => {}
                     }
 
-                    // TODO: create naming convention fo the certs close to the config struct
+                    // FILE CREATION
                     let directory = &server_config.format_directory_location();
-                    fs::create_dir_all(directory).unwrap();
-                    // fs::create_dir_all("certs/servercsr.pem", &server_csr).unwrap();
-                    // fs::create_dir_all("certs/server.key.pem", &server_key).unwrap();
-                    //
+                    fs::create_dir_all(&directory).unwrap();
 
-                    // fs::write(directory+"hi", &server_cert).unwrap();
-                    fs::write("certs/server.pem", &server_cert).unwrap();
-                    fs::write("certs/servercsr.pem", &server_csr).unwrap();
-                    fs::write("certs/server.key.pem", &server_key).unwrap();
+                    let key_name = &server_config.format_save_name(".crt.pem".into());
+                    let csr_name = &server_config.format_save_name(".csr.pem".into());
+                    let cert_name = &server_config.format_save_name(".key.pem".into());
+
+                    fs::write(directory.clone() + cert_name, &server_cert).unwrap();
+                    fs::write(directory.clone() + csr_name, &server_csr).unwrap();
+                    fs::write(directory.clone() + key_name, &server_key).unwrap();
 
                     println!("{server_cert}");
                     // TODO: save + validate certs
@@ -134,8 +134,22 @@ async fn main() {
                     // TODO: create a text with the instructions for singing of the cert through
                     // KPN  as a CA -> also add instructions to view the cert wih openssl commands
                     // TODO: create naming convention fo the certs close to the config struct
-                    fs::write("certs/csr.pem", &server_csr).unwrap();
-                    fs::write("certs/csr.key", &server_key).unwrap();
+
+                    // NOTE: cannot create multiple overlapping files because of naming
+                    // conevntion; create a date format aswell
+
+                    // FILE CREATION
+                    let directory = &server_config.format_directory_location();
+                    println!("{directory}");
+                    fs::create_dir_all(&directory).unwrap();
+
+                    let key_name = &server_config.format_save_name(".crt.pem".into());
+                    let csr_name = &server_config.format_save_name(".csr.pem".into());
+
+                    fs::write(directory.clone() + csr_name, &server_csr).unwrap();
+                    fs::write(directory.clone() + key_name, &server_key).unwrap();
+
+                    println!("{server_csr}");
 
                     // TODO: save + validate certs
                 }
