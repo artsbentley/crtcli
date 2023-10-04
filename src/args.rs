@@ -26,6 +26,7 @@ pub struct TenantConfig {
 }
 
 impl TenantConfig {
+    // name for local storage of certs
     pub fn format_save_name(&self, file_postfix: String) -> String {
         format!(
             "{}_{}_{}{}",
@@ -36,6 +37,12 @@ impl TenantConfig {
         )
     }
 
+    // name that will be used to upload to DSH secrets
+    pub fn format_dsh_secret_name(&self, file_postfix: String) -> String {
+        format!("{}_kafkaproxy-{}", self.broker_prefix, file_postfix)
+    }
+
+    // name for local storage of certs
     pub fn format_directory_location(&self) -> String {
         format!("{}/{}/server/", self.environment.to_str(), self.name,)
     }

@@ -1,7 +1,8 @@
 use crate::args::{TenantConfig, TenantConfigBuilder};
 use rcgen::{
-    Certificate, CertificateParams, DistinguishedName, DnType, DnValue, KeyIdMethod, KeyPair,
-    SanType, PKCS_ECDSA_P384_SHA384, PKCS_RSA_SHA256,
+    Certificate, CertificateParams, DistinguishedName, DnType, DnValue, ExtendedKeyUsagePurpose,
+    KeyIdMethod, KeyPair, KeyUsagePurpose, SanType, SerialNumber, PKCS_ECDSA_P384_SHA384,
+    PKCS_RSA_SHA256,
 };
 
 use picky::key::PrivateKey;
@@ -25,7 +26,7 @@ impl ServerCertificate {
 
         // NOTE: with these old configurations below no exponent is generated, which is needed for
         // the signing of KPN CA, also RCGEN does not scupport a private key algorithm below 2048,
-        // hence we are using openssl crate
+        // hence we are using openssl crate:
         // params.key_pair = Some(KeyPair::generate(&PKCS_ECDSA_P384_SHA384).expect("NOT WORKING"));
         // params.alg = &PKCS_ECDSA_P384_SHA384;
 
@@ -50,6 +51,25 @@ impl ServerCertificate {
 
         let broker_prefix = config.broker_prefix.clone();
         let url = config.environment.url();
+
+        // let serial_num: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        // let serial = SerialNumber::from(serial_num);
+        // params.serial_number = Some(serial);
+        params.serial_number = None;
+
+        // WARNING: key usage and key extended usage is not supported for CSR in the RCGEN crate,
+        // therefor a CSR is impossiple currently
+        // https://github.com/rustls/rcgen/pull/107/commits/9572fd985c39bfc70adeab1ec0272888e9bc93dd
+
+        // // Key usage
+        // params.key_usages.push(KeyUsagePurpose::DigitalSignature);
+        // params.key_usages.push(KeyUsagePurpose::KeyEncipherment);
+        // params.key_usages.push(KeyUsagePurpose::KeyAgreement);
+        //
+        // // Extended key usage
+        // params
+        //     .extended_key_usages
+        //     .push(ExtendedKeyUsagePurpose::ServerAuth);
 
         // DN
         let common_name = format!("{}.kafka.{}.{}", &broker_prefix, config.name, &url);

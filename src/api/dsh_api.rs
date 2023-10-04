@@ -6,6 +6,7 @@ use std::io;
 use crate::args::{Environment, InjectDSH, TenantConfig};
 
 use thiserror::Error; // Add this line to use the `thiserror` crate for custom errors.
+use tracing::{error, info};
 
 #[derive(Debug, Error)]
 pub enum ApiError {
@@ -85,9 +86,9 @@ impl DshApi {
         Ok(token.to_string())
     }
 
-    // TODO: retrieve the url from environment enum
     // TODO: make the function call the bearer token init func
     pub async fn send_secret(&self, name: &str, value: &str) -> Result<(), ApiError> {
+        // TODO: retrieve the url from environment enum
         let secret_url = "https://api.poc.kpn-dsh.com/resources/v0/allocation/training/secret"; // Replace with your actual URL
 
         let secret_data = json!({
@@ -112,9 +113,51 @@ impl DshApi {
             .await?;
 
         if response.status().is_success() {
-            println!("Secret sent successfully!");
+            info!("Secret sent successfully!");
         } else {
-            println!(
+            error!(
+                "Error: Request failed with status code {:?}",
+                response.status()
+            );
+        }
+
+        Ok(())
+    }
+
+    // TODO: create struct for the naming convention of DSH file names, so it can easily be passed
+    // here as a struct instead of having to use all the individual parameters
+    pub async fn create_dsh_cert(
+        &self,
+        brokerprefix: &str,
+        certname: &str,
+        keyname: &str,
+    ) -> Result<(), ApiError> {
+        let url = format!("https://api.poc.kpn-dsh.com/resources/v0/allocation/training/certificate/{brokerprefix}-kafka-proxy-certificate/configuration");
+
+        let certificate_data = json!({
+            "certChainSecret": certname,
+            "keySecret": keyname,
+        });
+
+        let client = Client::new();
+        let response = client
+            .put(&url)
+            .header("Content-Type", "application/json")
+            .header(
+                "Authorization",
+                format!(
+                    "Bearer {}",
+                    self.bearer_token.as_ref().unwrap_or(&"".to_string())
+                ),
+            )
+            .json(&certificate_data)
+            .send()
+            .await?;
+
+        if response.status().is_success() {
+            println!("Certificate configuration sent successfully!");
+        } else {
+            eprintln!(
                 "Error: Request failed with status code {:?}",
                 response.status()
             );

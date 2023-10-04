@@ -42,7 +42,8 @@ async fn main() {
         }
     } else {
         info!("Database already exists");
-    
+    }
+
     // CLI
     let args: CrtCliArgs = CrtCliArgs::parse();
 
@@ -58,7 +59,7 @@ async fn main() {
                     let environment = Environment::from_str(&config.environment).unwrap();
 
                     let inject_dsh = match config.inject_dsh.as_str() {
-                        "" => InjectDSH::False,
+                        "false" => InjectDSH::False,
                         _ => InjectDSH::True(config.inject_dsh),
                     };
 
@@ -94,12 +95,20 @@ async fn main() {
                     // REST calls
                     match server_config.inject_dsh {
                         InjectDSH::True(_) => {
+                            let key_name = &server_config.format_dsh_secret_name("key".into());
+                            let cert_name = &server_config.format_dsh_secret_name("cert".into());
+                            let ca_name = &server_config.format_dsh_secret_name("ca".into());
+
                             let mut api = DshApi::new(&server_config);
-                            let bearer = api.retrieve_token().await.unwrap();
+                            // let bearer = api.retrieve_token().await.unwrap();
                             api.initialize_bearer_token().await.unwrap();
 
-                            api.send_secret("testing", &server_cert).await.unwrap();
-                            println!("{bearer}");
+                            api.send_secret(ca_name, &ca.get_pem()).await.unwrap();
+                            api.send_secret(cert_name, &server_cert).await.unwrap();
+                            api.send_secret(key_name, &server_key).await.unwrap();
+                            api.create_dsh_cert(&server_config.broker_prefix, cert_name, key_name)
+                                .await
+                                .unwrap();
                         }
                         InjectDSH::False => {}
                     }
@@ -121,6 +130,14 @@ async fn main() {
                 }
 
                 // CREATE SERVER CSR
+                /*
+                 X509v3 Basic Constraints:
+                    CA:FALSE
+                X509v3 Key Usage:
+                    Digital Signature, Key Encipherment, Key Agreement
+                X509v3 Extended Key Usage: critical
+                    TLS Web Server Authentication
+                */
                 ServerSubCommand::Csr(config) => {
                     let environment = Environment::from_str(&config.environment).unwrap();
                     let server_config = TenantConfigBuilder::new()
@@ -235,7 +252,7 @@ async fn main() {
 // fs::create_dir_all("certs/").unwrap();
 //
 // fs::write("certs/entity.pem", entity_cert).unwrap();
-// fs::write("certs/entitycsr.pem", entity_csr).unwrap();
+// fs::write("certs/entitycsr.pem", entityY_csr).unwrap();
 // fs::write("certs/entity.key", entity_key).unwrap();
 //
 // fs::write("certs/server.pem", server_cert).unwrap();

@@ -6,7 +6,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
-use tracing::info;
+use tracing::{info, warn};
 // use std::{env, fs};
 
 pub struct Ca {
@@ -14,13 +14,20 @@ pub struct Ca {
 }
 
 impl Ca {
+    // TODO: CA path shouldnt be hardcoded
     pub fn new() -> Ca {
         if Self::exists() {
             info!("CA certificate exists");
             return Self::from_file();
         }
-        info!("CA certificate does not exist");
+        warn!("CA certificate does not exist");
+        info!("Creating CA certificate");
         Self::create_ca()
+    }
+
+    pub fn get_path() -> String {
+        let ca_cert_path = "certs/rootca.pem";
+        ca_cert_path.to_string()
     }
 
     // NOTE:  better solution: exists; return enum with string of cert
@@ -40,6 +47,10 @@ impl Ca {
         let cert = Certificate::from_params(ca_cert_params).unwrap();
 
         Ca { cert }
+    }
+
+    pub fn get_pem(&self) -> String {
+        self.cert.serialize_pem().unwrap()
     }
 
     pub fn create_ca() -> Ca {

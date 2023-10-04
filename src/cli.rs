@@ -76,30 +76,26 @@ pub struct RenewClientCert {
 
 #[derive(Debug, Args, Clone)]
 pub struct ServerCertConfig {
-    /// for now any random string for testing purposes
+    /// Enter tenant name
     #[clap(long, default_value = "test")]
     pub tenantname: String,
+    /// The environment on which the tenant is hosted
     #[clap(long, default_value = "poc")]
     pub environment: String,
     // #[clap(PossibleValue::new("dev", "test", "prod"))]
     #[clap(long, default_value = "test")]
     pub passphrase: String,
     #[clap(long, default_value = "broker")]
+    /// The prefix the Kafka broker will have
     pub broker_prefix: String,
+    /// Amount of brokers to create
     #[clap(long, default_value = "10")]
     pub broker_amount: u8,
-    #[clap(long, default_value = "")]
+    /// Takes a valid API key as input to upload secrets to DSH
+    #[clap(long, default_value = "false")]
     pub inject_dsh: String,
 }
 
-//     .name("tenantname".to_string())
-//     .environment(Environment::POC)
-//     .passphrase("test".to_string())
-//     .broker_prefix("broker-1".to_string())
-//     .broker_amount(BrokerAmount::Custom(3))
-//     .inject_dsh(InjectDSH::False)
-//
-//
 #[derive(Debug, Args, Clone)]
 pub struct CreateServerCsr {
     /// for now any random string for testing purposes
